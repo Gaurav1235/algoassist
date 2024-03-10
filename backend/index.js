@@ -7,7 +7,8 @@ const cors = require('cors'); // Import the cors middleware
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/v1', mainRouter);
+// app.use('/api/v1', mainRouter);
+app.use('/', mainRouter);
 
 // Other middleware and configurations...
 

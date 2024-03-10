@@ -9,31 +9,33 @@ const prisma = new PrismaClient({
     datasourceUrl: process.env.DATABASE_URL
 })
 
-import {ZodError } from 'zod';
-import { JWT_SECRET } from '../config';
+const { ZodError } = require('zod');
+const JWT_SECRET = process.env.JWT_SECRET
 
 // Define your routes
 const signupSchema = z.object({
-    username: z.string().email(),
-    firstName: z.string(),
-    lastName: z.string(),
+    email: z.string().email(),
+    // firstName: z.string(),
+    // lastName: z.string(),
     password: z.string()
 });
 
+
+// more strict password 
 const signinSchema = z.object({
-    username: z.string().email(),
-    password: z.string().minLength(6)
+    email: z.string().email(),
+    password: z.string().min(6)
 });
 
 router.post('/signUp', async (req, res) => {
 
-    username = req.body.username;
-	firstName = req.body.firstName;
-	lastName = req.body.lastName;
+    email = req.body.email;
+	// firstName = req.body.firstName;
+	// lastName = req.body.lastName;
 	password = req.body.password;
 
-    userData = {username,firstName,lastName, password};
-
+    // userData = {email,firstName,lastName, password};
+    userData = {email, password};
 
     try {
         // Attempt to validate the data
@@ -42,20 +44,20 @@ router.post('/signUp', async (req, res) => {
 
         const user = await prisma.user.findUnique({
             where: {
-                email: username,
+                email: email,
             },
         });
+        
+        console.log(user);
 
-        if(user.id){
+        if(user){
             res.status(411).send("Email already taken / Incorrect inputs");
         }
         else{
             const dbUser = await prisma.user.create({data:userData});
 
-            // if(dbUser.error){
-            //     res.status(411).send("Email already taken / Incorrect inputs");
-            // }
             console.log(dbUser);
+            console.log(JWT_SECRET);
 
             const token = jwt.sign({userId:dbUser.id},JWT_SECRET);
 
@@ -66,59 +68,63 @@ router.post('/signUp', async (req, res) => {
     } catch (error) {
         if (error instanceof ZodError) {
           console.error('Validation failed:', error.errors);
+          res.send('Validation failed!');
         } else {
           console.error('Unexpected error during validation:', error);
         }
+
     }
 
-
-    res.send('Hello from the main route!');
+    // res.send('Hello from the main route!');
 });
 
 
-router.post('signin',async (req,res)=>{
+router.post('/signin',async (req,res)=>{
 
-    username = req.body.username;
+    email = req.body.email;
 	password = req.body.password;
 
-    userData = {username, password};
-
+    userData = {email, password};
 
     try {
         // Attempt to validate the data
         signinSchema.safeParse(userData);
         console.log('Data is valid!');
 
-        const user = await User.findOne({username});
+        const user = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+        });
         
         if(user.password != password){
             res.status(411).send("Incorrect inputs");
         }
         else{
             const token = jwt.sign({userId:user._id},JWT_SECRET);
-            res.status(200).json({msg:'User created successfully',token});
+            res.status(200).json({msg:'User signed in successfully',token});
         }
 
 
     } catch (error) {
         if (error instanceof ZodError) {
           console.error('Validation failed:', error.errors);
+          res.send('Validation failed!');
         } else {
           console.error('Unexpected error during validation:', error);
+          res.send('Unexpected error during validation');
         }
     }
 
-
-    res.send('Hello from the main route!');
 
 })
 
 // other auth routes
 
-const updateBody = zod.object({
-	password: zod.string().optional(),
-    firstName: zod.string().optional(),
-    lastName: zod.string().optional(),
+const updateBody = z.object({
+	password: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
 })
 
 router.put("/", authMiddleware, async (req, res) => {
@@ -157,7 +163,7 @@ router.get('/bulk',authMiddleware, async (req, res)=>{
 
     res.json({
         user: users.map(user => ({
-            username: user.username,
+            email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
             _id: user._id
@@ -180,29 +186,28 @@ router.get('/users',authMiddleware, async (req,res)=>{
       
 })
 
-
 module.exports = router;
 
-app.post('/createUser',async(req,res)=>{
+// app.post('/createUser',async(req,res)=>{
     
-    const user = await prisma.user.create({
-        data: {
-          name: 'Jasd',
-          email: 'gura@kaun.com'
-        }
-    });
+//     const user = await prisma.user.create({
+//         data: {
+//           name: 'Jasd',
+//           email: 'gura@kaun.com'
+//         }
+//     });
 
-    console.log(user);
+//     console.log(user);
 
-    if(user){
-        res.json({
-            msg: "user created"
-        })
-    }
-    else{
-        res.json({
-            msg: "error creating user"
-        })
-    }
+//     if(user){
+//         res.json({
+//             msg: "user created"
+//         })
+//     }
+//     else{
+//         res.json({
+//             msg: "error creating user"
+//         })
+//     }
 
-})
+// })
