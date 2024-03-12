@@ -37,6 +37,20 @@ const app = express();
 
 router.use('/graphql', authMiddleware, graphqlHTTP({ schema, graphiql: true }));
 
+router.get('/posts',authMiddleware, async (req,res)=>{
+
+    
+    const posts = await prisma.post.findMany()
+    console.log(posts)
+    
+
+    res.json({
+        msg: posts
+    })
+
+      
+})
+
 // router.get("/post", authMiddleware, async (req, res) => {
     
 // });

@@ -8,12 +8,12 @@ const prisma = new PrismaClient({
 const resolvers = {
   Query: {
     //add async await syntax
-    user: (_, { id }) => prisma.user.findUnique({ where: { id } }),
-    allUsers: () => prisma.user.findMany(),
-    allPosts: () => prisma.post.findMany(),
+    user: async (_, { id }) => await prisma.user.findUnique({ where: { id } }),
+    allUsers: async () => await prisma.user.findMany(),
+    allPosts: async () => await prisma.post.findMany(),
   },
   Mutation: {
-    createUser: (_, { name, email }) => prisma.user.create({ data: { name, email } }),
+    createUser: async (_, { name, email }) => await prisma.user.create({ data: { name, email } }),
     createPost: async (_, { title, content, authorId }) => {
         try {
           console.log(authorId)
