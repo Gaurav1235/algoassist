@@ -57,7 +57,6 @@ router.post('/signUp', async (req, res) => {
             const dbUser = await prisma.user.create({data:userData});
 
             console.log(dbUser);
-            console.log(JWT_SECRET);
 
             const token = jwt.sign({userId:dbUser.id},JWT_SECRET);
 
